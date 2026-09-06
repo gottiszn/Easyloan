@@ -50,14 +50,11 @@ if (!phone) {
     return;
  }
 historyContainer.innerHTML = "<p>Fetching history..</p>";
-try { 
-    const res = await fetch(`/api/loan-history/${encodeURIComponent(phone)}`);
-     const data = await res.json();
-if (!res.ok || !data.loans || data.loans.length === 0) {
-  historyContainer.innerHTML = "<p style='color: red;'>No loan records found for this phone number.</p>";
-  return;
-}
-
+try { const res = await fetch(`/api/loan-history/${encodeURIComponent(phone)}`); const text = await res.text();
+let data; try { data = JSON.parse(text); } catch (jsonErr) { console.error("Server returned non-JSON response:", text); historyContainer.innerHTML = <p style="color: red;">Server Error: Check browser console for details.</p>; return; }
+if (!res.ok) { historyContainer.innerHTML = <p style="color: red;">Error: ${data.error || "Failed to load history."}</p>; return; }
+if (!data.loans || data.loans.length === 0) { historyContainer.innerHTML = "<p style='color: red;'>No loan records found for this phone number.</p>"; return; }
+// Render your list here
 // Build history list
 let html = `<ul style="list-style: none; padding: 0;">`;
 data.loans.forEach(loan => {
