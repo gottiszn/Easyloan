@@ -32,12 +32,13 @@ db.connect((err) =>
 
 
 // Registration Route 
-app.post("/api/register", (req, res) => { const { name, email, password, phone } = req.body;
+app.post("/register", (req, res) => { const { name, email, password, phone } = req.body;
 
 if (!name || !email || !password) { return res.status(400).json({ message: "Please provide name, email, and password" }); }
 
-const userPhone = phone || o; const sql = "INSERT INTO users (full_name, email, password_hash, phone) VALUES (?, ?, ?, NULL)";
-db.query(sql, [name, email, password, userPhone], (err, result) => { 
+const userPhone = phone || null;
+const sql = "INSERT INTO users (full_name, email, password) VALUES (?, ?, ?)";
+db.query(sql, [name, email, password], (err, result) => {
     if (err) { 
         console.error("Database query error:", err.message); 
         return res.status(500).json({ message: "Registration failed" }); 
