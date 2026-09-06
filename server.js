@@ -3,8 +3,6 @@ const mysql = require("mysql2");
 const app = express(); 
 const PORT = process.env.PORT || 8080;
 
-
-
 const http = require("http");
 const { Server } = require("socket.io");
 
