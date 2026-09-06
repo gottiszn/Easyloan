@@ -45,7 +45,7 @@ db.query(sql, [name, email, password], (err, result) => {
     } 
     res.json({ message: "Registration successful!", userId: result.insertId }); }); });
 // Login Route 
-aapp.post("/login", (req, res) => { const { email, password } = req.body;
+app.post("/login", (req, res) => { const { email, password } = req.body;
 if (!email || !password) { return res.status(400).json({ message: "Please enter email and password" }); }
 const cleanEmail = String(email).trim(); const cleanPassword = String(password).trim(); const sql = "SELECT * FROM users WHERE LOWER(email) = LOWER(?)";
 db.query(sql, [cleanEmail], (err, results) => { if (err) { console.error("Login Database error:", err.message); return res.status(500).json({ message: "Server error" }); }
