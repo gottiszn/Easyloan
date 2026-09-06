@@ -101,63 +101,52 @@ if (localStorage.getItem("adminToken") !== "easyloan-admin-secret-token") {
   }
 }
 setInterval(loadLoans,100000)
-  async function loadLoans() {
-    try {
-      const res = await fetch("/api/admin/loans");
-      const data = await res.json();
+ async function loadLoans() { 
+  try { const res = await fetch("/api/admin/loans"); 
+  const data = await res.json();
+const tbody = document.getElementById("loanTableBody");
+tbody.innerHTML = "";
 
-      const tbody = document.getElementById("loanTableBody");
-      tbody.innerHTML = "";
+// Check data directly since backend returns an array []
+if (!data || data.length === 0) {
+  tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No loan applications found.</td></tr>`;
+  return;
+}
 
-      if (!data.loans || data.loans.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No loan applications found.</td></tr>`;
-        return;
-      }
+data.forEach(loan => {
+  const imageTag = loan.image_path
+  ? `<a href="${loan.image_path}" target="_blank">< src="${loan.image_path}" alt="Proof" /></a>`
+    : "No image";
 
-      data.loans.forEach(loan => {
-        const imageTag = loan.image_path 
-          ? `<a href="${loan.image_path}" target="_blank"><img src="${loan.image_path}" alt="Proof" /></a>` 
-          : "No image";
-
-        tbody.innerHTML += `
-          <tr>
-            <td>#${loan.id}</td>
-            <td>${loan.user_name}</td>
-            <td>${loan.phone}</td>
-            <td>${loan.token_number}</td>
-            <td><code>${loan.secret_code}</code></td>
-            <td>${imageTag}</td>
-            <td class="${loan.status}">${loan.status}</td>
-            <td>
-              <button class="btn-approve" onclick="updateStatus(${loan.id}, 'Approved')">Approve</button>
-              <button class="btn-reject" onclick="updateStatus(${loan.id}, 'Rejected')">Reject</button>
-            </td>
-          </tr>
-        `;
-      });
-    } catch (err) {
-      console.error("Error loading loans:", err);
-    }
-  }
-
-  async function updateStatus(id, status) {
-    try {
-      const res = await fetch(`/admin/loans/${id}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status })
-      });
-
-      if (res.ok) {
-        loadLoans();
-      } else {
-        alert("Failed to update status.");
-      }
-    } catch (err) {
-      console.error("Status update error:", err);
-    }
-  }
-
+  tbody.innerHTML += `
+    <tr>
+      <td>#${loan.id}</td>
+      <td>${loan.user_name}</td>
+      <td>${loan.phone}</td>
+      <td>${loan.token_number}</td>
+      <td><code>${loan.secret_code || ''}</code></td>
+      <td>${imageTag}</td>
+      <td class="${loan.status}</td>
+      <td>
+        <button class="btn-approve" onclick="updateStatus(${loan.id}, 'Approved')">Approve</button>
+        <button class="btn-reject" onclick="updateStatus(${loan.id}, 'Rejected')">Reject</button>
+      </td>
+    </tr>`;
+});
+} catch (err) { console.error("Error loading loans:", err); } }
+async function updateStatus(id, status) { 
+  let balance = null;
+if (status === 'Approved') { 
+  const input = prompt("Enter the approved account balance for this user:", "5000"); 
+  if (input === null) return; // User clicked Cancel 
+  balance = parseFloat(input) || 0; }
+try { const res = await fetch(`/api/admin/loans/${id}/status`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: status, account_balance: balance }) });
+if (res.ok) {
+  loadLoans();
+} else {
+  alert("Failed to update status.");
+}
+} catch (err) { console.error("Error updating status:", err); } }
   loadLoans();
 </script>
 <div style="margin-top: 20px; border: 1px solid #ccc; padding: 15px; background: #fff;">

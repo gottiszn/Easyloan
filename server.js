@@ -120,22 +120,25 @@ return res.status(200).json({
 }); });
         
 // 2. Update Loan Status (Approve / Reject) 
-app.patch("/admin/loans/:id/status", (req, res) => { 
-    const loanId = req.params.id; 
-    const { status } = req.body; 
+app.patch("/api/admin/loans/:id/status", (req, res) => { 
+  const loanId = req.params.id; 
+  const { status, account_balance } = req.body;
+if (!["Approved", "Rejected"].includes(status)) 
+  { return res.status(400).json({ message: "Invalid status value." }); }
 
-    // 'Approved' or 'Rejected'
-if (!["Approved", "Rejected"].includes(status)) { 
-    return res.status(400).json({ message: "Invalid status status value." }); 
-}
-const sql = "UPDATE loans SET status = ? WHERE id = ?"; 
-db.query(sql, [status, loanId], (err, result) => { 
-    if (err) { 
-        console.error("Status update error:", err.message); 
-        return res.status(500).json({ message: "Failed to update status." }); 
-    } 
-    res.json({ message: `Loan #${loanId} marked as ${status}` }); }); });
+const sql = account_balance !== null && account_balance !== undefined 
+? "UPDATE loans SET status = ?, account_balance = ? WHERE id = ?" 
+: "UPDATE loans SET status = ? WHERE id = ?";
 
+const params = account_balance !== null && account_balance !== undefined 
+? [status, account_balance, loanId] 
+: [status, loanId];
+db.query(sql, params, (err, result) => { 
+  if (err) { 
+    console.error("Status update error:", err.message); 
+    return res.status(500).json({ message: "Failed to update status." }); 
+  } 
+  res.json({ message: `Loan #${loanId} marked as ${status}` }); }); });
 // Get Loan History by Phone Number
 app.get("/loan-history/:phone", (req, res) => {
   db.query(sql, [phone], (err, results) => {
