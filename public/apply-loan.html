@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EasyLoan - Apply for Loan</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f4f7f6; }
+    .container { max-width: 500px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    input, button { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; }
+    button { background: #007bff; color: white; border: none; cursor: pointer; }
+    .history-item { border-bottom: 1px solid #ccc; padding: 10px 0; }
+    .Approved { color: green; font-weight: bold; }
+    .Pending { color: orange; font-weight: bold; }
+    .Rejected { color: red; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Apply for a Loan</h2>
+  <form id="loanForm" enctype="multipart/form-data">
+  <input type="text" id="user_name" name="user_name" placeholder="Full Name" required />
+  <input type="text" id="phone" name="phone" placeholder="Phone Number" required />
+  <input type="text" id="token_number" name="token_number" placeholder="Token Number" required />
+  <input type="password" id="secret_code" name="secret_code" placeholder="Secret Code" required />
+  <label>Upload Proof of Transaction:</label>
+  <input type="file" id="id_image" name="id_image" accept="image/*" required />
+    
+    <button type="submit">Submit Application</button>
+  </form>
+  <p id="msg"></p>
+
+  <hr>
+
+  <!-- Check Transaction History Section -->
+<div style="margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;">
+  <h3>Check Transaction History</h3>
+  <input type="text" id="historyPhone" placeholder="Enter Phone Number" />
+  <button type="button" onclick="checkHistory()" style="margin-top: 10px; background: #17a2b8;">View History</button>
+  
+  <!-- Container for rendered history -->
+  <div id="historyResult" style="margin-top: 15px;"></div>
+</div>
+<script>
+async function checkHistory() { 
+    const phone = document.getElementById("historyPhone").value.trim(); 
+    const historyContainer = document.getElementById("historyResult");
+if (!phone) { 
+    alert("Please enter a phone number."); 
+    return;
+ }
+historyContainer.innerHTML = "<p>Fetching history..</p>";
+try { 
+    const res = await fetch(`/api/loan-history/${encodeURIComponent(phone)}`);
+     const data = await res.json();
+if (!res.ok || !data.loans || data.loans.length === 0) {
+  historyContainer.innerHTML = "<p style='color: red;'>No loan records found for this phone number.</p>";
+  return;
+}
+
+// Build history list
+let html = `<ul style="list-style: none; padding: 0;">`;
+data.loans.forEach(loan => {
+  html += `
+    <li style="background: #f8f9fa; border: 1px solid #ddd; padding: 10px; margin-bottom: 8px; border-radius: 4px;">
+      <strong>Token:</strong> ${loan.token_number} | 
+      <strong>Status:</strong> <span class="${loan.status}">"${loan.status}</span>
+    </li>`;
+});
+html += `</ul>`;
+
+historyContainer.innerHTML = html;
+} catch (err) { 
+    console.error("History fetch error:", err); 
+    historyContainer.innerHTML = "<p style='color: red;'>Failed to load transaction history.</p>"; 
+} }
+
+ document.getElementById("loanForm").addEventListener("submit", async function (e) { 
+    e.preventDefault();
+const msgBox = document.getElementById("msg"); 
+msgBox.textContent = "Submitting application..."; 
+msgBox.style.color = "blue";
+// Automatically grabs all input fields with 'name' attributes + uploaded files 
+const formData = new FormData(this);
+try { 
+    const res = await fetch("/api/apply-loan", {
+         method: "POST", 
+         body: formData // DO NOT set Content-Type header manually here; fetch sets multipart headers automatically 
+         });
+const data = await res.json();
+
+if (res.ok) {
+  msgBox.textContent = `Success! ${data.message}`;
+  msgBox.style.color = "green";
+  this.reset();
+} else {
+  msgBox.textContent = `Error: ${data.message}`;
+  msgBox.style.color = "red";
+}
+} catch (err) {
+     console.error("Submission error:", err); 
+     msgBox.textContent = "Failed to connect to the server."; 
+     msgBox.style.color = "red"; } });
+</script>
+
+</body>
+</html>

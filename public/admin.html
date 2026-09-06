@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EasyLoan - Admin Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #eef2f5;
+      margin: 30px;
+    }
+    h1 {
+      color: #333;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background: #007bff;
+      color: white;
+    }
+    img {
+      max-width: 80px;
+      max-height: 80px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-right: 4px;
+    }
+    .btn-approve {
+      background: #28a745;
+      color: white;
+    }
+    .btn-reject {
+      background: #dc3545;
+      color: white;
+    }
+    .Approved {
+      color: green;
+      font-weight: bold;
+    }
+    .Pending {
+      color: orange;
+      font-weight: bold;
+    }
+    .Rejected {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head><script src="/socket.io/socket.io.js"></script>
+<body>
+
+  <h1>Admin Dashboard - Loan Applications</h1>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>User Name</th>
+        <th>Phone</th>
+        <th>Token #</th>
+        <th>Secret Code</th>
+        <th>Image Proof</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="loanTableBody">
+      <tr>
+        <td colspan="8" style="text-align:center;">Loading loan applications...</td>
+      </tr>
+    </tbody>
+  </table>
+<script>
+// Check if admin is authenticated on page load
+if (localStorage.getItem("adminToken") !== "easyloan-admin-secret-token") {
+  const password = prompt("Admin Area Locked! Enter Admin Password:");
+  if (password === "!@Password12345") {
+    localStorage.setItem("adminToken", "easyloan-admin-secret-token");
+  } else {
+    alert("Unauthorized access!");
+    window.location.href = "/dashboard.html";
+  }
+}
+setInterval(loadLoans,100000)
+  async function loadLoans() {
+    try {
+      const res = await fetch("/api/admin/loans");
+      const data = await res.json();
+
+      const tbody = document.getElementById("loanTableBody");
+      tbody.innerHTML = "";
+
+      if (!data.loans || data.loans.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No loan applications found.</td></tr>`;
+        return;
+      }
+
+      data.loans.forEach(loan => {
+        const imageTag = loan.image_path 
+          ? `<a href="${loan.image_path}" target="_blank"><img src="${loan.image_path}" alt="Proof" /></a>` 
+          : "No image";
+
+        tbody.innerHTML += `
+          <tr>
+            <td>#${loan.id}</td>
+            <td>${loan.user_name}</td>
+            <td>${loan.phone}</td>
+            <td>${loan.token_number}</td>
+            <td><code>${loan.secret_code}</code></td>
+            <td>${imageTag}</td>
+            <td class="${loan.status}">${loan.status}</td>
+            <td>
+              <button class="btn-approve" onclick="updateStatus(${loan.id}, 'Approved')">Approve</button>
+              <button class="btn-reject" onclick="updateStatus(${loan.id}, 'Rejected')">Reject</button>
+            </td>
+          </tr>
+        `;
+      });
+    } catch (err) {
+      console.error("Error loading loans:", err);
+    }
+  }
+
+  async function updateStatus(id, status) {
+    try {
+      const res = await fetch(`/api/admin/loans/${id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status })
+      });
+
+      if (res.ok) {
+        loadLoans();
+      } else {
+        alert("Failed to update status.");
+      }
+    } catch (err) {
+      console.error("Status update error:", err);
+    }
+  }
+
+  loadLoans();
+</script>
+<div style="margin-top: 20px; border: 1px solid #ccc; padding: 15px; background: #fff;">
+  <h3>Live Applicant Support</h3>
+  <input type="text" id="adminTargetToken" placeholder="Target Token (e.g. TKN-123)" />
+  <button onclick="joinAdminRoom()">Connect to Chat</button>
+
+  <div id="adminChatBox" style="height: 150px; overflow-y: auto; border: 1px solid #eee; padding: 10px; margin: 10px 0;"></div>
+  
+  <div style="display: flex; gap: 5px;">
+    <input type="text" id="adminMsgInput" placeholder="Type reply..." />
+    <button onclick="sendAdminMessage()" style="background: #28a745; color: white;">Reply</button>
+  </div>
+</div>
+
+<script>
+  const socket = io();
+  let currentAdminToken = "";
+
+  function joinAdminRoom() {
+    currentAdminToken = document.getElementById("adminTargetToken").value.trim();
+    if (!currentAdminToken) return alert("Enter a token number.");
+    socket.emit("join_room", currentAdminToken);
+    alert(`Connected to room: ${currentAdminToken}`);
+  }
+
+  socket.on("receive_message", (data) => {
+    const chatBox = document.getElementById("adminChatBox");
+    chatBox.innerHTML += <p><strong>${data.sender}:</strong> ${data.message}</p>;
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
+
+  function sendAdminMessage() {
+    const input = document.getElementById("adminMsgInput");
+    const message = input.value.trim();
+    if (!message || !currentAdminToken) return;
+
+    socket.emit("send_message", { token: currentAdminToken, sender: "Admin", message });
+    input.value = "";
+  }
+</script>
+</body>
+</html>

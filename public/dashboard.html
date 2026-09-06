@@ -1,0 +1,157 @@
+<!DOCTYPE html> 
+<html lang="en"> 
+    <head> <script src="/socket.io/socket.io.js"></script>
+        <meta charset="UTF-8"> 
+        <meta name="viewport"content="width=device-width, initial-scale=1.0"> 
+        <title>EasyLoan - User Dashboard</title> 
+        <style>
+         body { font-family: Arial, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; } 
+         .container { max-width: 500px; margin: auto; } 
+
+        
+
+         /* Account Balance Card */ 
+         .balance-card { 
+            background: linear-gradient(135deg, #007bff, #0056b3); 
+            color: white;
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15); 
+            margin-bottom: 20px; } 
+            .balance-title { 
+                font-size: 14px; 
+                text-transform: uppercase; opacity: 0.8; } 
+                .balance-amount { font-size: 32px; font-weight: bold; margin: 10px 0; } 
+                .status-tag { display: inline-block; padding: 5px 10px; border-radius: 20px; font-size: 12px; background: rgba(255,255,255,0.2); } 
+                /* Action Card */ 
+                .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 02px 8px rgba(0,0,0,0.08); margin-bottom: 20px; } 
+                .form-group { margin-bottom: 15px; } 
+                label { display: block; font-weight: bold; margin-bottom: 5px; } 
+                input, select, button { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+                .btn-action { background: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; } 
+                .btn-action:hover { background: #218838; } 
+                .btn-apply { background: #007bff; color: white; text-decoration: none; display: block; text-align: center; padding: 10px; border-radius: 6px; font-weight: bold; } 
+                #withdrawSection { display: none; } 
+                </style> 
+                </head>
+                <body> 
+                    <div class="container">
+                         <!-- Token Input Header --> 
+                          <div class="card">
+                             <div class="form-group"> 
+                                <labelfor="userToken">ENTER LOAN VOUCHER/TOKEN NUMBER</label> 
+                                <input type="text" id="userToken" placeholder="e.g. 598765">
+                                 </div> 
+                                 <button onclick="loadDashboard()" style="background:#333; color:white; border:none;">Access Dashboard</button> 
+                                 </div>
+                                  <!-- Account Balance Display -->
+                                    <div class="balance-card"> 
+                                        <div class="balance-title">Available Loan Balance</div> 
+                                        <div class="balance-amount">GHS <span id="displayBalance">0.00</span></div>
+                                        <div>Status: <span id="displayStatus" class="status-tag">Unverified</span></div> 
+                                        </div> 
+                                        <!-- Apply Section --> 
+                                         <divclass="card"> <h3>Need a new loan?</h3> <a href="/apply-loan.html" class="btn-apply">Apply For A Loan Here</a>
+                                         </div>
+                                          <!-- Withdrawal Section --> 
+                                           <div class="card" id="withdrawSection"> 
+                                            <h3>Withdraw Funds</h3> 
+                                            <form onsubmit="handleWithdraw(event)"> 
+                                                <div class="form-group">
+                                                     <label>Withdrawal Amount (GHS)</label> 
+                                                     <inputtype="number" id="withdrawAmount" placeholder="Enter amount" required> 
+                                                     </div> 
+                                                     <div class="form-group">
+                                                        <label>Payment Method</label> 
+                                                        <select id="bankName" required> 
+                                                            <option value="MTN Mobile Money">MTN Mobile Money</option> 
+                                                            <option value="Telecel Cash">Telecel Cash</option> 
+                                                            <option value="Bank Account">Bank Account</option> 
+                                                            </select> </div> <div class="form-group"> 
+                                                                <label>Account Number / Phone</label> 
+                                                                <inputtype="text" id="accountNum" placeholder="e.g. 024XXXXXXX" required> 
+                                                                </div> 
+                                                                <button type="submit" class="btn-action">Confirm Withdrawal</button> 
+                                                                </form> 
+                                                                </div> 
+                                                                </div>
+                                                               <!-- Floating Chat Trigger Button -->
+<button id="chatToggleBtn" onclick="toggleChat()" style="position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: #007bff; color: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 1000;">
+  💬
+</button>
+
+<!-- Hidden Floating Chat Box -->
+<div id="chatPopup" style="display: none; position: fixed; bottom: 90px; right: 20px; width: 300px; background: white; border: 1px solid #ccc; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 15px; z-index: 1000;">
+  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px;">
+    <h4 style="margin: 0;">Live Support</h4>
+    <button onclick="toggleChat()" style="background: none; border: none; font-size: 16px; cursor: pointer;">✖</button>
+  </div>
+  
+  <div id="chatBox" style="height: 180px; overflow-y: auto; border: 1px solid #f0f0f0; padding: 8px; margin-bottom: 10px; background: #fafafa; border-radius: 5px;"></div>
+  
+  <div style="display: flex; gap: 5px;">
+    <input type="text" id="chatInput" placeholder="Type a message..." style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+    <button onclick="sendMessage()" style="padding: 8px 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Send</button>
+  </div>
+</div>
+                                                                
+                                                                
+                                                                <script> 
+                                                                 let activeToken = "";
+                                                                  async function loadDashboard() { 
+                                                                    const token = document.getElementById("userToken").value.trim(); 
+                                                                    if (!token) return alert("Please enter your token number."); 
+                                                                    try { 
+                                                                        const res = await fetch(`/api/user/dashboard/${encodeURIComponent(token)}`); 
+                                                                        const data = await res.json(); 
+                                                                        if (!res.ok)
+                                                                         return alert(data.message); 
+                                                                        activeToken = data.token_number;
+                                                                        document.getElementById("displayBalance").textContent = data.balance.toFixed(2);
+                                                                        document.getElementById("displayStatus").textContent = data.status; 
+                                                                        // Unlock withdrawal form only if Approved 
+                                                                        if(data.status === "Approved") {
+                                                                             document.getElementById("withdrawSection").style.display = "block"; 
+
+                                                                        } else {
+                                                                            document.getElementById("withdrawSection").style.display = "none"; 
+                                                                            } 
+                                                                            } catch (err) {
+                                                                                 alert("Failed to load account details."); 
+                                                                                 } } 
+                                                                                 async function handleWithdraw(e) { 
+                                                                                    e.preventDefault(); 
+                                                                                    const amount = document.getElementById("withdrawAmount").value; 
+                                                                                    const bank_name = document.getElementById("bankName").value; 
+                                                                                    const account_number = document.getElementById("accountNum").value;
+                                                                                     try { 
+                                                                                        const res = await fetch("/api/user/withdraw", { 
+                                                                                            method: "POST",
+                                                                                            headers: { "Content-Type": "application/json" }, 
+                                                                                            body: JSON.stringify({ token_number: activeToken, amount, bank_name, account_number })
+                                                                                             });
+                                                                                              const data = await res.json(); 
+                                                                                              alert(data.message); 
+                                                                                              if (res.ok) loadDashboard(); 
+                                                                                              } catch(err) { 
+                                                                                                alert("Withdrawal submission failed."); 
+                                                                                                }
+                                                                                                 }
+                                                                                                 const socket = io();
+// Call this inside your loadDashboard() function after a token is entered: // connectChat(data.token_number);
+function connectChat(token) { socket.emit("join_room", token); }
+socket.on("receive_message", (data) => { const chatBox = document.getElementById("chatBox"); chatBox.innerHTML += <p><strong>${data.sender}:</strong> ${data.message}</p>; chatBox.scrollTop = chatBox.scrollHeight; });
+function sendMessage() { const msgInput = document.getElementById("chatInput"); const message = msgInput.value.trim(); if (!message || !activeToken) return;
+socket.emit("send_message", { token: activeToken, sender: "User", message }); msgInput.value = ""; }
+
+function toggleChat() {
+  const chatPopup = document.getElementById("chatPopup");
+  if (chatPopup.style.display === "none" || chatPopup.style.display === "") {
+    chatPopup.style.display = "block";
+  } else {
+    chatPopup.style.display = "none";
+  }
+}
+                                                                                                  </script>
+                </body>
+</html>
