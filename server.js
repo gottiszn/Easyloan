@@ -102,18 +102,25 @@ app.use("/uploads", express.static("public/uploads"));
 
         // Submit Loan Application Route 
 app.post("/apply-loan", upload.single("id_image"), (req, res) => { 
-  const { user_name, phone, token_number, secret_code } = req.body; const image_path = req.file ? `/uploads/${req.file.filename}` : null;
+  const { user_name, phone, token_number, secret_code } = req.body; 
+  const image_path = req.file ? `/uploads/${req.file.filename}` : null;
+
 const sql = "INSERT INTO loans (user_name, phone, token_number, secret_code, image_path, status) VALUES (?, ?, ?, ?, ?, 'Pending')";
-db.query(sql, [user_name, phone, token_number, secret_code, image_path], (err, result) => { if (err) { console.error("Loan application error:", err.message); return res.status(500).json({ message: "Failed to submit loan application" }); }
+
+db.query(sql, [user_name, phone, token_number, secret_code, image_path], (err, result) => { 
+  if (err) { 
+    console.error("SQL INSERT ERROR:", err); 
+    return res.status(500).json({ message: "Database error: " + err.message }); 
+  }
 const smsMessage = `Hello ${user_name}, your EasyLoan application has been received! Your Token Number is ${token_number}. Keep this token to check your account status.`;
 console.log("SMS Notification:", smsMessage);
 
-res.status(200).json({
+return res.status(200).json({
   message: "Loan application submitted successfully!",
   loanId: result.insertId,
   token_number: token_number
 });
-});
+}); });
         
 // 2. Update Loan Status (Approve / Reject) 
 app.patch("/admin/loans/:id/status", (req, res) => { 
@@ -215,19 +222,7 @@ app.post("/api/admin/login", (req, res) => {
 // Start Server 
 app.listen(PORT, () => { console.log(`EasyLoan server running at http://localhost:${PORT}`); });
 
-const multer = require("multer"); 
-const path = require("path");
 
-// Configure storage for image uploads 
-// Multer File Upload Configuration 
-const storage = multer.diskStorage({ 
-  destination: (req, file, cb) => { 
-    cb(null, "public/uploads"); 
-  }, 
-  filename: (req, file, cb) => { cb(null, Date.now() + path.extname(file.originalname)); } });
-const upload = multer({ storage: storage });
-// Ensure uploads folder static route 
-app.use("/uploads", express.static("public/uploads"));
  
 // --- Socket.io Real-Time Chat ---
 io.on("connection", (socket) => {
@@ -250,9 +245,9 @@ server.listen(3000, () => {
 sendSMS(phone, smsMessage);
 
 res.json({ message: "Loan application submitted successfully!", token_number });
-}); 
+
 // 2. Fetch Transaction & Loan History Route 
-app.get("/api/loan-history/:phone", (req, res) => { const userPhone = req.params.phone;
+app.get("/loan-history/:phone", (req, res) => { const userPhone = req.params.phone;
 const sql = "SELECT id, user_name, token_number, status, created_at FROM loans WHERE phone = ? ORDER BY created_at DESC";
 db.query(sql, [userPhone], (err, results) => { if (err) { console.error("Fetch history error:", err.message); return res.status(500).json({ message: "Failed to fetch transaction history." }); }
 res.json({ history: results });
