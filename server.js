@@ -1,7 +1,8 @@
 const express = require("express"); 
 const mysql = require("mysql2");
 const app = express(); 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
+server.listen(PORT, () => console.log(`Easyloan server running on port ${PORT}`));
 
 
 const http = require("http");
@@ -14,9 +15,15 @@ const io = new Server(server);
 app.use(express.json()); app.use(express.urlencoded({ extended: true })); app.use(express.static("public"));
 
 // MySQL Connection 
-const db = mysql.createConnection({ host: "localhost", user: "root", password: "akwadaapaCK12", database: "Easyloan" 
-
+const db = mysql.createConnection({
+  host: process.env.MYSQLHOST,
+  user: process.env.MYSQLUSER,
+  password: process.env.MYSQLPASSWORD,
+  database: process.env.MYSQLDATABASE,
+  port: process.env.MYSQLPORT || 3306
 });
+
+
 
 db.connect((err) => 
     { if (err) { 
