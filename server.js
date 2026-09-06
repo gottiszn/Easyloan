@@ -20,9 +20,6 @@ const db = mysql.createConnection({
   database: process.env.MYSQLDATABASE,
   port: process.env.MYSQLPORT || 3306
 });
-server.listen(PORT, () => {
-  console.log(`Easyloan server running on port ${PORT}`)
-});
 
 
 db.connect((err) => 
@@ -216,8 +213,6 @@ app.post("/api/admin/login", (req, res) => {
     res.status(401).json({ success: false, message: "Invalid admin credentials!" });
   }
 });
-
-
  
 // --- Socket.io Real-Time Chat ---
 io.on("connection", (socket) => {
@@ -237,7 +232,7 @@ const sql = "SELECT id, user_name, token_number, status, created_at FROM loans W
 
 return res.status(200).json({ history: results }); }); 
 
-// Use the PORT variable declared at top of file, or read directly inside listen 
+// Use the PORT variable declared at top of file, or read directly inside
 const serverPort = process.env.PORT || 8080;
 server.listen(serverPort, "0.0.0.0", () => { 
   console.log(`Server running on port ${serverPort}`); });
