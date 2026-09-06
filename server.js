@@ -237,6 +237,7 @@ const sql = "SELECT id, user_name, token_number, status, created_at FROM loans W
 
 return res.status(200).json({ history: results }); }); 
 
-// Use the PORT variable declared at top of file, or read directly inside listen const serverPort = process.env.PORT || 8080;
+// Use the PORT variable declared at top of file, or read directly inside listen 
+const serverPort = process.env.PORT || 8080;
 server.listen(serverPort, "0.0.0.0", () => { 
   console.log(`Server running on port ${serverPort}`); });
