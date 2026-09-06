@@ -218,11 +218,6 @@ app.post("/api/admin/login", (req, res) => {
 });
 
 
-
-// Start Server 
-app.listen(PORT, () => { console.log(`EasyLoan server running at http://localhost:${PORT}`); });
-
-
  
 // --- Socket.io Real-Time Chat ---
 io.on("connection", (socket) => {
@@ -235,20 +230,14 @@ io.on("connection", (socket) => {
   });
 });
 
-// Replace app.listen with server.listen
-server.listen(3000, () => {
-  console.log("Server running with Chat on http://localhost:3000");
-});
-
-
-// Fire SMS dispatch asynchronously
-sendSMS(phone, smsMessage);
-
-res.json({ message: "Loan application submitted successfully!", token_number });
-
-// 2. Fetch Transaction & Loan History Route 
-app.get("/loan-history/:phone", (req, res) => { const userPhone = req.params.phone;
+// Place all routes ABOVE server.listen 
+app.get("/loan-history/:phone", (req, res) => { 
+const userPhone = req.params.phone; 
 const sql = "SELECT id, user_name, token_number, status, created_at FROM loans WHERE phone = ? ORDER BY created_at DESC";
-db.query(sql, [userPhone], (err, results) => { if (err) { console.error("Fetch history error:", err.message); return res.status(500).json({ message: "Failed to fetch transaction history." }); }
-res.json({ history: results });
-}); });
+
+return res.status(200).json({ history: results }); }); 
+
+// Start Server (Use existing PORT variable or assign directly) 
+PORT = process.env.PORT || 8080; 
+server.listen(PORT, "0.0.0.0", () => { 
+  console.log(`Server running on port ${PORT}`); });
