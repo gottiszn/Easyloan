@@ -213,6 +213,16 @@ app.post("/api/admin/login", (req, res) => {
     res.status(401).json({ success: false, message: "Invalid admin credentials!" });
   }
 });
+app.get("/api/admin/loans", (req, res) => {
+  const sql = "SELECT * FROM loans ORDER BY id DESC";
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching admin loans:", err);
+      return res.status(500).json({ error: "Database query failed" });
+    }
+    res.json(results);
+  });
+});
  
 // --- Socket.io Real-Time Chat ---
 io.on("connection", (socket) => {
