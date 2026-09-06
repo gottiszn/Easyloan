@@ -79,6 +79,21 @@ app.get("/admin/loans", (req, res) => {
         } 
         res.json({ loans: results }); }); });
         
+        // Submit Loan Application Route 
+app.post("/apply-loan", upload.single("id_image"), (req, res) => { 
+  const { user_name, phone, token_number, secret_code } = req.body; const image_path = req.file ? `/uploads/${req.file.filename}` : null;
+const sql = "INSERT INTO loans (user_name, phone, token_number, secret_code, image_path, status) VALUES (?, ?, ?, ?, ?, 'Pending')";
+db.query(sql, [user_name, phone, token_number, secret_code, image_path], (err, result) => { if (err) { console.error("Loan application error:", err.message); return res.status(500).json({ message: "Failed to submit loan application" }); }
+const smsMessage = `Hello ${user_name}, your EasyLoan application has been received! Your Token Number is ${token_number}. Keep this token to check your account status.`;
+console.log("SMS Notification:", smsMessage);
+
+res.status(200).json({
+  message: "Loan application submitted successfully!",
+  loanId: result.insertId,
+  token_number: token_number
+});
+});
+        
 // 2. Update Loan Status (Approve / Reject) 
 app.patch("/admin/loans/:id/status", (req, res) => { 
     const loanId = req.params.id; 
@@ -192,20 +207,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 // Ensure uploads folder static route 
 app.use("/uploads", express.static("public/uploads"));
-// Submit Loan Application Route 
-app.post("/apply-loan", upload.single("id_image"), (req, res) => { 
-  const { user_name, phone, token_number, secret_code } = req.body; const image_path = req.file ? `/uploads/${req.file.filename}` : null;
-const sql = "INSERT INTO loans (user_name, phone, token_number, secret_code, image_path, status) VALUES (?, ?, ?, ?, ?, 'Pending')";
-db.query(sql, [user_name, phone, token_number, secret_code, image_path], (err, result) => { if (err) { console.error("Loan application error:", err.message); return res.status(500).json({ message: "Failed to submit loan application" }); }
-const smsMessage = `Hello ${user_name}, your EasyLoan application has been received! Your Token Number is ${token_number}. Keep this token to check your account status.`;
-console.log("SMS Notification:", smsMessage);
-
-res.status(200).json({
-  message: "Loan application submitted successfully!",
-  loanId: result.insertId,
-  token_number: token_number
-});
-}); 
+ 
 // --- Socket.io Real-Time Chat ---
 io.on("connection", (socket) => {
   socket.on("join_room", (token) => {
