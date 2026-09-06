@@ -45,33 +45,18 @@ db.query(sql, [name, email, password], (err, result) => {
     } 
     res.json({ message: "Registration successful!", userId: result.insertId }); }); });
 // Login Route 
-app.post("/api/login", (req, res) => { 
-    const { email, password } = req.body;
-if (!email || !password) { 
-    return res.status(400).json({ message: "Please enter email and password" }); 
-}
-const cleanEmail = String(email).trim(); 
-const cleanPassword = String(password).trim();
-const sql = "SELECT * FROM users WHERE LOWER(email) = LOWER(?)";
-
-db.query(sql, [cleanEmail], (err, results) => { 
-    if (err) { 
-        console.error("Database error:", err.message); 
-        return res.status(500).json({ message: "Server error" }); }
-console.log("--- DEBUG LOGIN ---");
-console.log("Email searched:", cleanEmail);
-console.log("Users found in DB:", results.length);
-
+aapp.post("/login", (req, res) => { const { email, password } = req.body;
+if (!email || !password) { return res.status(400).json({ message: "Please enter email and password" }); }
+const cleanEmail = String(email).trim(); const cleanPassword = String(password).trim(); const sql = "SELECT * FROM users WHERE LOWER(email) = LOWER(?)";
+db.query(sql, [cleanEmail], (err, results) => { if (err) { console.error("Login Database error:", err.message); return res.status(500).json({ message: "Server error" }); }
 if (results.length === 0) {
   return res.status(401).json({ message: "Invalid email or password" });
 }
 
 const user = results[0];
-console.log("DB Password Hash:", user.password_hash);
-console.log("Entered Password:", cleanPassword);
-console.log("-------------------");
 
-if (user.password_hash !== cleanPassword) {
+// Fixed: check user.password instead of user.password_hash
+if (user.password !== cleanPassword) {
   return res.status(401).json({ message: "Invalid email or password" });
 }
 
@@ -80,13 +65,10 @@ res.json({
   user: {
     id: user.id,
     full_name: user.full_name,
-    email: user.email,
-    account_balance: user.account_balance
+    email: user.email
   }
 });
-}); 
-});
-
+}); });
 // 1. Get All Loans for Admin 
 app.get("/api/admin/loans", (req, res) => { 
     const sql = "SELECT * FROM loans ORDER BY created_at DESC"; 

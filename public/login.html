@@ -35,7 +35,7 @@
     const passwordInput = document.getElementById("password").value;
 
     // 2. Send the clean values to the server
-    const response = await fetch("/api/login", {
+    const response = await fetch("/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 
