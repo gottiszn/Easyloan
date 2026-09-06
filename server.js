@@ -78,7 +78,28 @@ app.get("/admin/loans", (req, res) => {
             return res.status(500).json({ message: "Failed to fetch loans." }); 
         } 
         res.json({ loans: results }); }); });
-        
+
+
+const path = require("path");
+const multer = require("multer");
+
+
+// 1. Configure Multer Storage
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "public/uploads");
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+
+// 2. Initialize Upload Middleware
+const upload = multer({ storage: storage });
+
+// 3. Serve Static Uploads
+app.use("/uploads", express.static("public/uploads"));
+
         // Submit Loan Application Route 
 app.post("/apply-loan", upload.single("id_image"), (req, res) => { 
   const { user_name, phone, token_number, secret_code } = req.body; const image_path = req.file ? `/uploads/${req.file.filename}` : null;
