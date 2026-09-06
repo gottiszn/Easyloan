@@ -70,7 +70,7 @@ res.json({
 });
 }); });
 // 1. Get All Loans for Admin 
-app.get("/api/admin/loans", (req, res) => { 
+app.get("/admin/loans", (req, res) => { 
     const sql = "SELECT * FROM loans ORDER BY created_at DESC"; 
     db.query(sql, (err, results) => { 
         if (err) { 
@@ -80,7 +80,7 @@ app.get("/api/admin/loans", (req, res) => {
         res.json({ loans: results }); }); });
         
 // 2. Update Loan Status (Approve / Reject) 
-app.patch("/api/admin/loans/:id/status", (req, res) => { 
+app.patch("/admin/loans/:id/status", (req, res) => { 
     const loanId = req.params.id; 
     const { status } = req.body; 
 
@@ -95,6 +95,21 @@ db.query(sql, [status, loanId], (err, result) => {
         return res.status(500).json({ message: "Failed to update status." }); 
     } 
     res.json({ message: `Loan #${loanId} marked as ${status}` }); }); });
+
+// Get Loan History by Phone Number
+app.get("/loan-history/:phone", (req, res) => {
+  const { phone } = req.params;
+  const sql = "SELECT token_number, status FROM loans WHERE phone = ?";
+
+  db.query(sql, [phone], (err, results) => {
+    if (err) {
+      console.error("History fetch error:", err.message);
+      return res.status(500).json({ message: "Failed to fetch loan history." });
+    }
+    res.json({ loans: results });
+  });
+});
+
 
     // User API: Get Dashboard & Account Balance 
     app.get("/api/user/dashboard/:token", (req, res) => { 

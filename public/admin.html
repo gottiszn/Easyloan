@@ -142,7 +142,7 @@ setInterval(loadLoans,100000)
 
   async function updateStatus(id, status) {
     try {
-      const res = await fetch(`/api/admin/loans/${id}/status`, {
+      const res = await fetch(`/admin/loans/${id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status })
