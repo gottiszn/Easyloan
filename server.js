@@ -22,7 +22,9 @@ const db = mysql.createConnection({
   database: process.env.MYSQLDATABASE,
   port: process.env.MYSQLPORT || 3306
 });
-server.listen(PORT, () => console.log(`Easyloan server running on port ${PORT}`));
+server.listen(PORT, () => {
+  console.log(`Easyloan server running on port ${PORT}`)
+});
 
 
 db.connect((err) => 
