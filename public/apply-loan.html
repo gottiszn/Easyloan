@@ -51,7 +51,7 @@ if (!phone) {
  }
 historyContainer.innerHTML = "<p>Fetching history..</p>";
 try { 
-    const res = await fetch(`/loan-history/${encodeURIComponent(phone)}`);
+    const res = await fetch(`/api/loan-history/${encodeURIComponent(phone)}`);
      const data = await res.json();
 if (!res.ok || !data.loans || data.loans.length === 0) {
   historyContainer.innerHTML = "<p style='color: red;'>No loan records found for this phone number.</p>";

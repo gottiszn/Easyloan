@@ -140,15 +140,18 @@ db.query(sql, params, (err, result) => {
   } 
   res.json({ message: `Loan #${loanId} marked as ${status}` }); }); });
 // Get Loan History by Phone Number
-app.get("/loan-history/:phone", (req, res) => {
+app.get("/api/loan-history/:phone", (req, res) => {
+  const { phone } = req.params;
+  const sql = "SELECT * FROM loans WHERE phone = ? ORDER BY id DESC";
+
   db.query(sql, [phone], (err, results) => {
     if (err) {
+      console.error("History fetch error:", err.message);
       return res.status(500).json({ message: "Failed to fetch loan history." });
     }
     res.json({ loans: results });
   });
 });
-
 app.get("/api/admin/loans", (req, res) => {
   const sql = "SELECT * FROM loans ORDER BY id DESC";
   db.query(sql, (err, results) => {
