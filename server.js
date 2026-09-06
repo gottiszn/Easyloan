@@ -138,18 +138,24 @@ db.query(sql, [status, loanId], (err, result) => {
 
 // Get Loan History by Phone Number
 app.get("/loan-history/:phone", (req, res) => {
-  const { phone } = req.params;
-  const sql = "SELECT token_number, status FROM loans WHERE phone = ?";
-
   db.query(sql, [phone], (err, results) => {
     if (err) {
-      console.error("History fetch error:", err.message);
       return res.status(500).json({ message: "Failed to fetch loan history." });
     }
     res.json({ loans: results });
   });
 });
 
+app.get("/api/admin/loans", (req, res) => {
+  const sql = "SELECT * FROM loans ORDER BY id DESC";
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching admin loans:", err);
+      return res.status(500).json({ error: "Database query failed" });
+    }
+    res.json(results);
+  });
+});
 
     // User API: Get Dashboard & Account Balance 
     app.get("/api/user/dashboard/:token", (req, res) => { 
@@ -213,16 +219,7 @@ app.post("/api/admin/login", (req, res) => {
     res.status(401).json({ success: false, message: "Invalid admin credentials!" });
   }
 });
-app.get("/api/admin/loans", (req, res) => {
-  const sql = "SELECT * FROM loans ORDER BY id DESC";
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error("Error fetching admin loans:", err);
-      return res.status(500).json({ error: "Database query failed" });
-    }
-    res.json(results);
-  });
-});
+
  
 // --- Socket.io Real-Time Chat ---
 io.on("connection", (socket) => {
