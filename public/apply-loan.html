@@ -83,7 +83,7 @@ msgBox.style.color = "blue";
 // Automatically grabs all input fields with 'name' attributes + uploaded files 
 const formData = new FormData(this);
 try { 
-    const res = await fetch("/api/apply-loan", {
+    const res = await fetch("/apply-loan", {
          method: "POST", 
          body: formData // DO NOT set Content-Type header manually here; fetch sets multipart headers automatically 
          });
