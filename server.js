@@ -2,7 +2,7 @@ const express = require("express");
 const mysql = require("mysql2");
 const app = express(); 
 const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => console.log(`Easyloan server running on port ${PORT}`));
+
 
 
 const http = require("http");
@@ -22,7 +22,7 @@ const db = mysql.createConnection({
   database: process.env.MYSQLDATABASE,
   port: process.env.MYSQLPORT || 3306
 });
-
+server.listen(PORT, () => console.log(`Easyloan server running on port ${PORT}`));
 
 
 db.connect((err) => 
