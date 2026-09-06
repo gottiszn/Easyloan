@@ -37,13 +37,15 @@
       border: 1px solid #ccc;
     }
     button {
-      padding: 6px 12px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-      margin-right: 4px;
-    }
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-right: 4px;
+  margin-top: 4px;
+  display: inline-block;
+}
     .btn-approve {
       background: #28a745;
       color: white;
@@ -134,13 +136,17 @@ data.forEach(loan => {
     </tr>`;
 });
 } catch (err) { console.error("Error loading loans:", err); } }
-async function updateStatus(id, status) { 
-  let balance = null;
+async function updateStatus(id, status) { let balance = null;
+// Only prompt if clicking Approve 
 if (status === 'Approved') { 
   const input = prompt("Enter the approved account balance for this user:", "5000"); 
   if (input === null) return; // User clicked Cancel 
   balance = parseFloat(input) || 0; }
-try { const res = await fetch(`/api/admin/loans/${id}/status`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: status, account_balance: balance }) });
+try { 
+  const res = await fetch(`/api/admin/loans/${id}/status`, { 
+    method: "PATCH", 
+    headers: { "Content-Type": "application/json" }, 
+    body: JSON.stringify({ status: status, account_balance: balance }) });
 if (res.ok) {
   loadLoans();
 } else {
